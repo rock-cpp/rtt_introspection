@@ -28,12 +28,13 @@ void ConnectionMatcher::createGraph()
     std::multimap<std::string, ChannelBase *> localURIToElementMap;
     std::multimap<std::string, ChannelBase *> remoteURIToElementMap;
     size_t curIndent = 0;
+    tasks.reserve(data.size());
     for(const TaskData &taskData: data)
     {
         std::cout << "TaskData " << taskData.taskName << std::endl;
         tasks.push_back(Task());
         
-        Task *task = &(tasks.back());
+        Task *task = tasks.data() + (tasks.size() - 1);
         task->name = taskData.taskName;
         curIndent += 4;
         for(const PortData &pd: taskData.portData)
