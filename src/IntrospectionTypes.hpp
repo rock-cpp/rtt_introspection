@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <rtt/ConnPolicy.hpp>
 
 namespace RTT
 {
@@ -27,6 +28,7 @@ class ConnectionData
 {
 public:
     std::vector<ElementData> elementData;
+    RTT::ConnPolicy policy;
 };
 
 class PortData

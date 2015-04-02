@@ -17,13 +17,9 @@ const std::string IntrospectionService::OperationName = std::string("getIntrospe
     
 IntrospectionService::IntrospectionService(RTT::TaskContext* owner): Service(ServiceName, owner)
 {
-    
     OrocosHelpers::loadTypekitAndTransports("rtt_introspection");
-    
     RTT::Operation<TaskData ()> *op = new RTT::Operation<TaskData ()>(OperationName, boost::bind(&IntrospectionService::getIntrospectionInformation, this));
-    
     owner->addOperation(*op);
-    
 }
 
 
@@ -54,15 +50,14 @@ TaskData IntrospectionService::getIntrospectionInformation()
         
         const RTT::internal::ConnectionManager *conManager = port->getManager();
         if(!conManager)
-            throw std::runtime_error("Introspection :Error, not connection manager found");
+            throw std::runtime_error("Introspection :Error, no connection manager found");
         
         for(const RTT::internal::ConnectionManager::ChannelDescriptor &desc : conManager->getChannels())
         {
             ConnectionData connData;
+            connData.policy = boost::get<2>(desc);
             
             RTT::base::ChannelElementBase *elem = boost::get<1>(desc).get();
-            RTT::base::ChannelElementBase *lastElem = elem;
-            
             int cnt = 0;
             while(elem)
             {
@@ -81,9 +76,7 @@ TaskData IntrospectionService::getIntrospectionInformation()
                     {
                         throw std::runtime_error("Introspection : Error could not cast to ChannelBufferElementBase but type is ChannelBufferElement");
                     }
-                    
                 }
-
 
                 elemdata.remoteElement = elem->isRemoteElement();
                 elemdata.localURI = elem->getLocalURI();
@@ -91,8 +84,6 @@ TaskData IntrospectionService::getIntrospectionInformation()
                 
                 connData.elementData.push_back(elemdata);
 
-                lastElem = elem;
-                
                 if(portData.type == PortData::INPUT)
                 {
                     //traverse the chain
