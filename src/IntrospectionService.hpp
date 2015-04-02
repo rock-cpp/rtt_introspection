@@ -13,6 +13,7 @@ class IntrospectionService : public RTT::Service
 {
 public:
     static const std::string ServiceName;
+    static const std::string OperationName;
     IntrospectionService(RTT::TaskContext* owner = 0);
     
 private:
