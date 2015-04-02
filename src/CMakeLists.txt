@@ -1,3 +1,8 @@
+find_package(Rock)
+SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++0x" )
+# set(OROCOS_TARGET "gnulinux")
+rock_init(rtt_introspection 0.1)
+
 rock_library(rtt_introspection
     SOURCES IntrospectionService.cpp
     HEADERS IntrospectionService.hpp
