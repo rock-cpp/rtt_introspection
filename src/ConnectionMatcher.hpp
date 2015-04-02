@@ -92,8 +92,19 @@ public:
     
     void printPort(const RTT::introspection::Port* port, int curIndent);
     
+    void writeGraphToDotFile(const std::string &fileName);
 };
+
+
+
 }
+}
+
+inline std::ostream& operator << (std::ostream& io, RTT::introspection::ChannelBase const& channel)
+{
+    
+    io << channel.type << "(" << channel.localURI << " / " << channel.remoteURI << ")";
+    return io;
 }
 
 #endif // CONNECTIONMATCHER_H

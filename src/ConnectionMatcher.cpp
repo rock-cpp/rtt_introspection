@@ -1,5 +1,7 @@
 #include "ConnectionMatcher.hpp"
 #include <boost/graph/adjacency_list.hpp>
+#include <fstream>
+
 namespace RTT
 {
 namespace introspection
@@ -159,6 +161,109 @@ void ConnectionMatcher::createGraph()
     
     std::cout << "Exit " << std::endl;
     
+}
+
+std::map<std::string, bool> visitMap;
+
+void addChannelElementRecursive(std::ofstream &out, const ChannelBase *ce, const ChannelBase *from)
+{
+    if(visitMap.find(ce->localURI) != visitMap.end())
+        return;
+    
+    visitMap[ce->localURI] = true;
+    
+    const BufferChannel *be = dynamic_cast<const BufferChannel *>(ce);
+    if(be)
+    {
+    out << "\"" << ce->localURI << "\"[shape=record, label=\"{" << ce->type <<  " | { Size = " << be->bufferSize << " | FillLevel = " << be->fillLevel << " | Dropped = " << be->samplesDropped << "}}\"]" << std::endl;
+    }
+    else
+    {
+    out << "\"" << ce->localURI << "\"[label=" << ce->type <<  "]" << std::endl;
+    }    
+    for(ChannelBase *elem: ce->in)
+    {
+        if(elem->connectedToPort)
+        {
+            if(dynamic_cast<InputPort *>(elem->connectedToPort))
+            {
+                out << "\""  << elem->localURI << "\""  << "->\""<< elem->connectedToPort->owningTask->name << elem->connectedToPort->name << "\""<< std::endl;
+            }
+            else
+            {
+                out << "\"" << elem->connectedToPort->owningTask->name << elem->connectedToPort->name << "\"->"  << "\"" << elem->localURI  << "\"" << std::endl;
+            }
+        }
+        //don't add connection, if input is pointing to the caller, 
+        //because it was already added through his out elements.
+        if(elem == from)
+            continue;
+        
+        out << "\"" << elem->localURI << "\"" << "->" << "\"" << ce->localURI << "\"" << std::endl;
+
+        addChannelElementRecursive(out, elem, ce);
+    }
+    
+    for(ChannelBase *elem: ce->out)
+    {
+        if(elem->connectedToPort)
+        {
+            if(dynamic_cast<InputPort *>(elem->connectedToPort))
+            {
+                out << "\""  << elem->localURI << "\""  << "->\""<< elem->connectedToPort->owningTask->name << elem->connectedToPort->name << "\"" << std::endl;
+            }
+            else
+            {
+                out << "\"" << elem->connectedToPort->owningTask->name << elem->connectedToPort->name << "\"->"  << "\"" << elem->localURI  << "\"" << std::endl;
+            }
+        }
+        //don't add connection, if output is pointing to the caller, 
+        //because it was already added through his in elements.
+        if(elem == from)
+            continue;
+        
+
+        out << "\"" << ce->localURI << "\"" << "->" << "\"" << elem->localURI << "\"" << std::endl;
+
+        addChannelElementRecursive(out, elem, ce);
+    }
+}
+
+void ConnectionMatcher::writeGraphToDotFile(const std::string& fileName)
+{
+    std::ofstream out(fileName);
+    
+    out << "digraph G {" << std::endl;
+    
+    for(const Task &t: tasks)
+    {
+        out << "subgraph cluster" << t.name << " {label = \"" << t.name << "\"; ";
+        for(const OutputPort *op: t.outputPorts)
+        {
+            out << "\"" << t.name << op->name << "\"[label=\"" << op->name << "\"]; " << std::endl;
+        }
+        for(const InputPort *op: t.inputPorts)
+        {
+            out << "\"" << t.name << op->name << "\"[label=\"" << op->name << "\"]; " << std::endl;
+        }
+        out << "}; " << std::endl;
+        
+        for(const OutputPort *port: t.outputPorts)
+        {
+            for(const Connection &con: port->connections)
+            {
+                addChannelElementRecursive(out, con.firstElement, nullptr);
+            }
+        }
+        for(const InputPort *port: t.inputPorts)
+        {
+            for(const Connection &con: port->connections)
+            {
+                addChannelElementRecursive(out, con.firstElement, nullptr);
+            }
+        }
+    }
+    out << "}" << std::endl;
 }
 
 void ConnectionMatcher::printPort(const Port* port, int curIndent)
