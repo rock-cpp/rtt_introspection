@@ -56,49 +56,39 @@ int main(int argc, char** argv)
     
     RTT::introspection::ConnectionMatcher matcher;
     std::string str;
+    std::cout << "Press Enter to capture network state" << std::endl;
     std::getline(std::cin, str);
     
     for(const std::string &taskName: tasks)
-    {
-        std::cout << "TaSK is " << taskName << std::endl;
-        RTT::corba::TaskContextProxy *task = RTT::corba::TaskContextProxy::Create(taskName, false);
+    {        
+        RTT::corba::TaskContextProxy *task = RTT::corba::TaskContextProxy::Create(taskName);
         
-        RTT::OperationCaller< bool (const std::string &)> loadPlugin(task->getOperation("loadPlugin"));
-        RTT::OperationCaller< bool (const std::string &)> loadService(task->getOperation("loadService"));
+        RTT::OperationInterfacePart *op = nullptr;
         
-        loadPlugin("/home/scotch/spacebot/install/lib/orocos/plugins/librtt_introspection.so");
-        
-        loadService(RTT::introspection::IntrospectionService::ServiceName);
-        
-//         if(!task->getOperation(RTT::introspection::IntrospectionService::OperationName))
-//         {
-//             task->loadPlugin();
-//         }
-        delete task;
-    }    
-
-    usleep(100000);
-    
-    for(const std::string &taskName: tasks)
-    {
-        std::cout << "TaSK is " << taskName << std::endl;
-        RTT::corba::TaskContextProxy *task = RTT::corba::TaskContextProxy::Create(taskName, false);
-        while(!task->getOperation(RTT::introspection::IntrospectionService::OperationName))
+        while(!(op = task->getOperation(RTT::introspection::IntrospectionService::OperationName)))
         {
+            std::cout << "No operation " << RTT::introspection::IntrospectionService::OperationName << " detected on task " << taskName << " loading introspection service" << std::endl;
+            RTT::OperationCaller< bool (const std::string &)> loadPlugin(task->getOperation("loadPlugin"));
+            RTT::OperationCaller< bool (const std::string &)> loadService(task->getOperation("loadService"));
+
+            //FIXME find way better way to do this
+            loadPlugin("/home/scotch/spacebot/install/lib/orocos/plugins/librtt_introspection.so");
+            
+            loadService(RTT::introspection::IntrospectionService::ServiceName);
+            
             usleep(10000);
             
             delete task;
-            task = RTT::corba::TaskContextProxy::Create(taskName, false);
+            task = RTT::corba::TaskContextProxy::Create(taskName);
         }
 
-        RTT::OperationCaller<RTT::introspection::TaskData ()> fc(task->getOperation(RTT::introspection::IntrospectionService::OperationName));
+        RTT::OperationCaller<RTT::introspection::TaskData ()> fc(op);
         matcher.addTaskData(fc());
-        
+
         delete task;
     }    
 
     matcher.createGraph();
-    std::cout << "Service loaded" << std::endl;
     
     matcher.printGraph();
     
