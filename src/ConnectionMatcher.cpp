@@ -174,7 +174,15 @@ void ConnectionMatcher::printPort(const Port* port, int curIndent)
         std::cout << std::string(curIndent, ' ');
         
         if(!con.firstElement->connectedToPort || con.firstElement->connectedToPort != port)
+        {
+            std::cout << "Port mismatch for element " << *(con.firstElement) << " for port " << port->name << "(" << port << ")";
+            if(!con.firstElement->connectedToPort)
+                std::cout << " not connected ";
+            else
+                std::cout << " connected Port " << con.firstElement->connectedToPort->name << "(" << con.firstElement->connectedToPort << ")";
+            std::cout << std::endl;
             throw std::runtime_error("Error, first element is not connected to this port");
+        }
         
         const ChannelBase *cb = con.firstElement;
         while(cb)
@@ -182,7 +190,7 @@ void ConnectionMatcher::printPort(const Port* port, int curIndent)
             std::cout << cb->type << "(" << cb->localURI << ")->";
             if(cb->connectedToPort && cb->connectedToPort != port)
             {
-                std::cout << cb->connectedToPort->name << "->" ; //<< cb->connectedToPort->owningTask->name;
+                std::cout << cb->connectedToPort->name << "->" << cb->connectedToPort->owningTask->name;
             }
 
             if(isInput)
