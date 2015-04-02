@@ -13,42 +13,38 @@
 
 int main(int argc, char** argv)
 {
-
     Spawner &spawner(Spawner::getInstace());
-    
     RTT::corba::TaskContextServer::InitOrb(argc, argv);
 
-    Deployment introTest("inspection_test");
-//     spawner.spawnDeployment(&introTest, false);
-
-    spawner.spawnTask("inspection_test::Task", "task1", false);
-    spawner.spawnTask("inspection_test::Task2", "task2", false);
-    
     OrocosHelpers::loadTypekitAndTransports("rtt-types");
     OrocosHelpers::loadTypekitAndTransports("rtt_introspection");
-    
-    
-    spawner.waitUntilAllReady(base::Time::fromSeconds(10.0));
-    
-//     introTest.loadNeededTypekits();
-    
-    RTT::corba::TaskContextProxy *t1 = RTT::corba::TaskContextProxy::Create("task1", false);
-    RTT::corba::TaskContextProxy *t2 = RTT::corba::TaskContextProxy::Create("task2", false);
-    
-    t1->getPort("output")->connectTo(t2->getPort("input2"), RTT::ConnPolicy::buffer(50));
-    t2->getPort("output2")->connectTo(t1->getPort("input"));
 
-    t1->configure();
-    t2->configure();
-    
-    t1->start();
-    t2->start();
-    
-    delete t1;
-    delete t2;
-    
-    std::cout << "Connect done" << std::endl;
+    if(argc > 2)
+    {    
+        Deployment introTest("inspection_test");
 
+        spawner.spawnTask("inspection_test::Task", "task1", false);
+        spawner.spawnTask("inspection_test::Task2", "task2", false);
+        
+        spawner.waitUntilAllReady(base::Time::fromSeconds(10.0));
+        
+        RTT::corba::TaskContextProxy *t1 = RTT::corba::TaskContextProxy::Create("task1", false);
+        RTT::corba::TaskContextProxy *t2 = RTT::corba::TaskContextProxy::Create("task2", false);
+        
+        t1->getPort("output")->connectTo(t2->getPort("input2"), RTT::ConnPolicy::buffer(50));
+        t2->getPort("output2")->connectTo(t1->getPort("input"));
+
+        t1->configure();
+        t2->configure();
+        
+        t1->start();
+        t2->start();
+        
+        delete t1;
+        delete t2;
+        
+        std::cout << "Connect done" << std::endl;
+    }
     CorbaNameService ns;
     
     ns.connect();
@@ -69,8 +65,6 @@ int main(int argc, char** argv)
     {
         throw std::runtime_error("Error: Service plugin not found on disk");
     }
-    
-    std::cout << "plugin dir is " << servicePath << std::endl;
     
     RTT::introspection::ConnectionMatcher matcher;
     std::string str;
