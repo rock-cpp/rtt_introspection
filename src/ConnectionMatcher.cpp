@@ -89,7 +89,21 @@ void ConnectionMatcher::createGraph()
 
                     //from here on we should not have any duplicates
                     
-                    ChannelBase *be = new ChannelBase();
+                    ChannelBase *be = nullptr;
+                    
+                    if(e.type == "ChannelBufferElement")
+                    {
+                        BufferChannel *bc = new BufferChannel();
+                        bc->fillLevel = e.numSamples;
+                        bc->samplesDropped = e.droppedSamples;
+                        bc->bufferSize = e.bufferSize;
+                        be = bc;
+                    }
+                    else
+                    {
+                        be = new ChannelBase();
+                    }
+                    
                     be->type = e.type;
                     be->localURI = e.localURI;
                     be->remoteURI = e.remoteURI;

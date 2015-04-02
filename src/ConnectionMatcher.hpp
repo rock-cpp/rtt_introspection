@@ -28,6 +28,16 @@ public:
     std::vector<ChannelBase *> out;
     
     Port *connectedToPort;
+    
+    virtual ~ChannelBase() {};
+};
+
+class BufferChannel : public ChannelBase
+{
+public:
+    size_t bufferSize;
+    size_t fillLevel;
+    size_t samplesDropped;
 };
 
 class Connection
