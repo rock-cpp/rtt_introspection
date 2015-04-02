@@ -85,50 +85,6 @@ void ConnectionMatcher::createGraph()
                             c.firstElement = elem;
                             break;
                         }
-                        
-                        
-//                         //case of output port
-//                         if(e.type == "ConnInputEndpoint")
-//                         {
-//                             auto remoteIt = remoteURIToElementMap.find(e.remoteURI);
-//                             if(remoteIt != remoteURIToElementMap.end())
-//                             {
-//                                 if(pd.type != PortData::PortData::OUTPUT)
-//                                     throw std::runtime_error("Error, got ConnInputEndpoint first, but port is not an output");
-//                                 
-//                                 auto elem = remoteIt->second;
-//                                 if(elem->out.size() && elem->out[0]->remoteURI == e.localURI)
-//                                 {
-//                                     if(e.type != elem->type)
-//                                         throw std::runtime_error("Error, type of connection mismatch");
-//                                     
-//                                     std::cout << "Special endpoint case " << std::endl;
-//                                     std::cout << "Registering Elem " << elem->type << " at port " << p->name << " of task " << p->owningTask->name << std::endl;
-// 
-//                                     elem->connectedToPort = p;
-//                                     c.elements.push_back(elem);
-//                                     break;
-//                                 }
-//                             }
-//                         }
-//                         //case if input port
-//                         if(e.type == "ConnOutputEndpoint")
-//                         {
-//                             //no remote url, next is the port
-//                             if(pd.type != PortData::INPUT)
-//                                 throw std::runtime_error("Error, got ConnOutputEndpoint first, but port is not an input");
-//                             
-//                             auto localIt = localURIToElementMap.find(e.localURI);
-//                             if(localIt != localURIToElementMap.end())
-//                             {
-//                                 std::cout << "Special output endpoint case " << std::endl;
-//                                 std::cout << "Registering Elem " << localIt->second->type << " at port " << p->name << " of task " << p->owningTask->name << std::endl;
-//                                 localIt->second->connectedToPort = p;
-//                                 //the other side was already added. We can stop here.
-//                                 c.elements.push_back(localIt->second);
-//                                 break;
-//                             }
-//                         }
                     }
 
                     //from here on we should not have any duplicates
