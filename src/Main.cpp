@@ -9,6 +9,7 @@
 #include "ConnectionMatcher.hpp"
 #include <orocos_cpp/CorbaNameService.hpp>
 #include "IntrospectionService.hpp"
+#include <boost/filesystem.hpp>
 
 int main(int argc, char** argv)
 {
@@ -54,6 +55,23 @@ int main(int argc, char** argv)
     
     auto tasks = ns.getRegisteredTasks();
     
+
+    
+    std::vector<std::string> searchedFields;
+    std::vector<std::string> pkgConfResults;
+    searchedFields.push_back("prefix");
+    
+    OrocosHelpers::parsePkgConfig("rtt_introspection.pc", searchedFields, pkgConfResults);
+    
+    std::string servicePath = pkgConfResults[0] + "/lib/orocos/plugins/librtt_introspection.so";
+    
+    if(!boost::filesystem::exists(servicePath))
+    {
+        throw std::runtime_error("Error: Service plugin not found on disk");
+    }
+    
+    std::cout << "plugin dir is " << servicePath << std::endl;
+    
     RTT::introspection::ConnectionMatcher matcher;
     std::string str;
     std::cout << "Press Enter to capture network state" << std::endl;
@@ -71,8 +89,9 @@ int main(int argc, char** argv)
             RTT::OperationCaller< bool (const std::string &)> loadPlugin(task->getOperation("loadPlugin"));
             RTT::OperationCaller< bool (const std::string &)> loadService(task->getOperation("loadService"));
 
+            
             //FIXME find way better way to do this
-            loadPlugin("/home/scotch/spacebot/install/lib/orocos/plugins/librtt_introspection.so");
+            loadPlugin(servicePath);
             
             loadService(RTT::introspection::IntrospectionService::ServiceName);
             
