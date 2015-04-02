@@ -25,7 +25,7 @@ void ConnectionMatcher::createGraph()
     std::cout << std::endl;
     std::cout << std::endl;
     
-    std::cout << "BUILDING GRAPH" << std::endl;
+//     std::cout << "BUILDING GRAPH" << std::endl;
     
     std::multimap<std::string, ChannelBase *> localURIToElementMap;
     std::multimap<std::string, ChannelBase *> remoteURIToElementMap;
@@ -33,7 +33,7 @@ void ConnectionMatcher::createGraph()
     tasks.reserve(data.size());
     for(const TaskData &taskData: data)
     {
-        std::cout << "TaskData " << taskData.taskName << std::endl;
+//         std::cout << "TaskData " << taskData.taskName << std::endl;
         tasks.push_back(Task());
         
         Task *task = tasks.data() + (tasks.size() - 1);
@@ -41,7 +41,7 @@ void ConnectionMatcher::createGraph()
         curIndent += 4;
         for(const PortData &pd: taskData.portData)
         {
-            std::cout << std::string(curIndent, ' ') << "PortData " << pd.portName << std::endl;
+//             std::cout << std::string(curIndent, ' ') << "PortData " << pd.portName << std::endl;
             Port *p;
             if(pd.type == PortData::INPUT)
             {
@@ -61,12 +61,12 @@ void ConnectionMatcher::createGraph()
 
             for(const ConnectionData &cd : pd.connectionData)
             {
-                std::cout << std::string(curIndent, ' ') << "Connection " << std::endl;
+//                 std::cout << std::string(curIndent, ' ') << "Connection " << std::endl;
                 Connection c;
                 bool firstElem = true;
                 for(const ElementData &e: cd.elementData)
                 {
-                    std::cout << std::string(curIndent, ' ') << "Con Element " << e.type << " localURI " << e.localURI << " remoteURI " << e.remoteURI << std::endl;
+//                     std::cout << std::string(curIndent, ' ') << "Con Element " << e.type << " localURI " << e.localURI << " remoteURI " << e.remoteURI << std::endl;
                     
                     //special case first : 
                     //in cas of a local connection, we get double channel elements
@@ -77,13 +77,13 @@ void ConnectionMatcher::createGraph()
                         auto localIt = localURIToElementMap.find(e.localURI);
                         if(localIt != localURIToElementMap.end())
                         {
-                            std::cout << "Found Element that is already registered" << std::endl;
+//                             std::cout << "Found Element that is already registered" << std::endl;
 
                             auto elem = localIt->second;
                             if(e.type != elem->type)
                                 throw std::runtime_error("Error, type of connection mismatch");
                             elem->connectedToPort = p;
-                            std::cout << "Registering Elem " << elem->type << " at port " << p->name << " of task " << p->owningTask->name << std::endl;
+//                             std::cout << "Registering Elem " << elem->type << " at port " << p->name << " of task " << p->owningTask->name << std::endl;
                             c.firstElement = elem;
                             break;
                         }
@@ -124,7 +124,7 @@ void ConnectionMatcher::createGraph()
                             localIt->second->in.push_back(be);
                             be->out.push_back(localIt->second);
                             
-                            std::cout << "Element " << be->type << " la " << be->localURI << " ru " << be->remoteURI << " Writes into " << localIt->second->type << " la " << localIt->second->localURI << " ra " << localIt->second->remoteURI << std::endl;
+//                             std::cout << "Element " << be->type << " la " << be->localURI << " ru " << be->remoteURI << " Writes into " << localIt->second->type << " la " << localIt->second->localURI << " ra " << localIt->second->remoteURI << std::endl;
                         }
                     }
                     
@@ -136,13 +136,13 @@ void ConnectionMatcher::createGraph()
                         remoteIt->second->out.push_back(be);
                         be->in.push_back(remoteIt->second);
                         
-                        std::cout << "Element " << remoteIt->second->type << " la " << remoteIt->second->localURI << " ra " << remoteIt->second->remoteURI << " Writes into " << be->type << " la " << be->localURI << " ru " << be->remoteURI << std::endl;
+//                         std::cout << "Element " << remoteIt->second->type << " la " << remoteIt->second->localURI << " ra " << remoteIt->second->remoteURI << " Writes into " << be->type << " la " << be->localURI << " ru " << be->remoteURI << std::endl;
                     }
                     
                     
                     if(firstElem)
                     {
-                        std::cout << "Registering Elem " << be->type << " at port " << p->name << " of task " << p->owningTask->name << std::endl;
+//                         std::cout << "Registering Elem " << be->type << " at port " << p->name << " of task " << p->owningTask->name << std::endl;
                         be->connectedToPort = p;
                         c.firstElement = be;
                     }
@@ -159,7 +159,7 @@ void ConnectionMatcher::createGraph()
 
     }
     
-    std::cout << "Exit " << std::endl;
+//     std::cout << "Exit " << std::endl;
     
 }
 
