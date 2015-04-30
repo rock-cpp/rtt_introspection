@@ -12,6 +12,7 @@ rock_library(rtt_introspection
         orocos-rtt-${OROCOS_TARGET}
         orocos-rtt-mqueue-${OROCOS_TARGET}
         orocos-rtt-corba-${OROCOS_TARGET}
+        orocos_cpp
         orocos_cpp_base
 )
 

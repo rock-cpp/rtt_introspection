@@ -4,7 +4,7 @@
 #include <rtt/Port.hpp>
 #include <rtt/transports/mqueue/MQChannelElement.hpp>
 #include <rtt/plugin/ServicePlugin.hpp>
-#include <orocos_cpp_base/OrocosHelpers.hpp>
+#include <orocos_cpp/PluginHelper.hpp>
 
 
 namespace RTT
@@ -17,7 +17,7 @@ const std::string IntrospectionService::OperationName = std::string("getIntrospe
     
 IntrospectionService::IntrospectionService(RTT::TaskContext* owner): Service(ServiceName, owner)
 {
-    OrocosHelpers::loadTypekitAndTransports("rtt_introspection");
+    PluginHelper::loadTypekitAndTransports("rtt_introspection");
     RTT::Operation<TaskData ()> *op = new RTT::Operation<TaskData ()>(OperationName, boost::bind(&IntrospectionService::getIntrospectionInformation, this));
     owner->addOperation(*op);
 }

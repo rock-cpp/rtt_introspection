@@ -3,7 +3,7 @@
 #include <orocos_cpp/Spawner.hpp>
 #include <rtt/transports/corba/TaskContextServer.hpp>
 #include <rtt/transports/corba/TaskContextProxy.hpp>
-#include <orocos_cpp_base/OrocosHelpers.hpp>
+#include <orocos_cpp/PluginHelper.hpp>
 #include <rtt/OperationCaller.hpp>
 #include "IntrospectionTypes.hpp"
 #include "ConnectionMatcher.hpp"
@@ -16,8 +16,8 @@ int main(int argc, char** argv)
     Spawner &spawner(Spawner::getInstace());
     RTT::corba::TaskContextServer::InitOrb(argc, argv);
 
-    OrocosHelpers::loadTypekitAndTransports("rtt-types");
-    OrocosHelpers::loadTypekitAndTransports("rtt_introspection");
+    PluginHelper::loadTypekitAndTransports("rtt-types");
+    PluginHelper::loadTypekitAndTransports("rtt_introspection");
 
     if(argc > 2)
     {    
@@ -51,20 +51,7 @@ int main(int argc, char** argv)
     
     auto tasks = ns.getRegisteredTasks();
     
-
-    
-    std::vector<std::string> searchedFields;
-    std::vector<std::string> pkgConfResults;
-    searchedFields.push_back("prefix");
-    
-    OrocosHelpers::parsePkgConfig("rtt_introspection.pc", searchedFields, pkgConfResults);
-    
-    std::string servicePath = pkgConfResults[0] + "/lib/orocos/plugins/librtt_introspection.so";
-    
-    if(!boost::filesystem::exists(servicePath))
-    {
-        throw std::runtime_error("Error: Service plugin not found on disk");
-    }
+    std::string servicePath = "/orocos";
     
     RTT::introspection::ConnectionMatcher matcher;
     std::string str;
@@ -84,8 +71,11 @@ int main(int argc, char** argv)
             RTT::OperationCaller< bool (const std::string &)> loadService(task->getOperation("loadService"));
 
             
-            //FIXME find way better way to do this
-            loadPlugin(servicePath);
+            if(!loadPlugin(servicePath))
+            {
+                std::cout << "Warning, failed to load introspection plugin on task " << task->getName() << std::endl;
+                break;
+            }
             
             loadService(RTT::introspection::IntrospectionService::ServiceName);
             
