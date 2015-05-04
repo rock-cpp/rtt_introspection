@@ -52,6 +52,8 @@ TaskData IntrospectionService::getIntrospectionInformation()
         if(!conManager)
             throw std::runtime_error("Introspection :Error, no connection manager found");
         
+        conManager->lock();
+        
         for(const RTT::internal::ConnectionManager::ChannelDescriptor &desc : conManager->getChannels())
         {
             ConnectionData connData;
@@ -74,6 +76,8 @@ TaskData IntrospectionService::getIntrospectionInformation()
                     }
                     else
                     {
+                        conManager->unlock();
+
                         throw std::runtime_error("Introspection : Error could not cast to ChannelBufferElementBase but type is ChannelBufferElement");
                     }
                 }
@@ -100,7 +104,8 @@ TaskData IntrospectionService::getIntrospectionInformation()
             
             portData.connectionData.push_back(connData);
         }
-        
+        conManager->unlock();
+
         taskData.portData.push_back(portData);
     }
     
