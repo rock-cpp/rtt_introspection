@@ -31,4 +31,4 @@ rock_executable(rtt_introspection_bin Main.cpp
         matcher)
 
 install(TARGETS rtt_introspection
-        LIBRARY DESTINATION lib/orocos/plugins/)
+        LIBRARY DESTINATION lib/orocos/plugins/rtt_introspection/plugins)

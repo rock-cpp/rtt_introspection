@@ -51,7 +51,7 @@ int main(int argc, char** argv)
     
     auto tasks = ns.getRegisteredTasks();
     
-    std::string servicePath = "/orocos";
+    std::string servicePath = "rtt_introspection";
     
     RTT::introspection::ConnectionMatcher matcher;
     std::string str;
