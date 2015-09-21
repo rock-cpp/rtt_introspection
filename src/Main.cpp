@@ -11,6 +11,8 @@
 #include "IntrospectionService.hpp"
 #include <boost/filesystem.hpp>
 
+using namespace orocos_cpp;
+
 int main(int argc, char** argv)
 {
     Spawner &spawner(Spawner::getInstace());

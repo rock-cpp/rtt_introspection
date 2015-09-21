@@ -6,6 +6,7 @@
 #include <rtt/plugin/ServicePlugin.hpp>
 #include <orocos_cpp/PluginHelper.hpp>
 
+using namespace orocos_cpp;
 
 namespace RTT
 {
@@ -45,8 +46,6 @@ TaskData IntrospectionService::getIntrospectionInformation()
         {
             portData.type = PortData::OUTPUT;
         }
-
-        
         
         const RTT::internal::ConnectionManager *conManager = port->getManager();
         if(!conManager)
