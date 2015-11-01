@@ -25,7 +25,13 @@ rock_library(matcher
 
 rock_executable(rtt_introspection_bin Main.cpp
     DEPS_PKGCONFIG
+        rtt_typelib-${OROCOS_TARGET}
+        orocos-rtt-${OROCOS_TARGET}
+        orocos-rtt-mqueue-${OROCOS_TARGET}
+        orocos-rtt-corba-${OROCOS_TARGET}
         orocos_cpp
+        orocos_cpp_base
+	logger-proxies
     DEPS 
         rtt_introspection
         matcher)
