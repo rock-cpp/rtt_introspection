@@ -1,6 +1,15 @@
 #include "ConnectionMatcher.hpp"
 #include <boost/graph/adjacency_list.hpp>
 #include <fstream>
+#include <cnd/model/Activity.hpp>
+#include <cnd/model/Annotation.hpp>
+#include <cnd/model/Connection.hpp>
+#include <cnd/model/Deployment.hpp>
+#include <cnd/model/Lists.hpp>
+#include <cnd/model/Network.hpp>
+#include <cnd/model/PortRef.hpp>
+#include <cnd/model/Task.hpp>
+#include <string>
 
 namespace RTT
 {
@@ -339,6 +348,118 @@ void ConnectionMatcher::printGraph()
         }
     }
 }
+
+
+
+
+std::map<std::string, bool> visitMapWidget;
+
+void addConnectionWithOut(cnd::model::Connection* con, const ChannelBase *ce, const Port* fromPort, bool buffered)
+{
+    if(ce->connectedToPort && ce->connectedToPort != fromPort)
+    {
+	  const cnd::model::PortRef portTo(ce->connectedToPort->owningTask->name, ce->connectedToPort->name);
+	  con->setTo(portTo);
+	  if(buffered)
+	  {
+	      con->setType(cnd::model::ConPolicy::BUFFER);
+	  }
+	  else
+	  {
+	      con->setType(cnd::model::ConPolicy::DATA);
+	  }
+	  
+	  return;
+  
+    }
+    
+    if(ce->type == std::string("ChannelBufferElement") && !buffered)
+        buffered = true;
+    
+    for(ChannelBase *elem: ce->out)
+    {
+        if(visitMapWidget.find(elem->localURI) == visitMapWidget.end())
+        {
+            visitMapWidget[elem->localURI] = true;
+            addConnectionWithOut(con, elem, fromPort, buffered);
+        }
+    }
+    
+    for(ChannelBase *elem: ce->in)
+    {
+        if(visitMapWidget.find(elem->localURI) == visitMapWidget.end())
+        {
+            visitMapWidget[elem->localURI] = true;
+            addConnectionWithOut(con, elem, fromPort, buffered);
+        }
+    }
+    
+}
+
+
+
+void ConnectionMatcher::exportToCndFile(const std::string &fileName)
+{
+    cnd::model::Network net(fileName);
+    
+    std::map<int,cnd::model::Connection> connectionMap;
+    
+    std::map<std::string,cnd::model::Task> taskMap;
+    
+    int id = 0;
+    
+    for(const Task &t: tasks)
+    {
+        cnd::model::Task cndTask;
+        cndTask.setUID((std::string)t.name);
+        taskMap[t.name] = cndTask;
+        std::cout << "Task " << t.name << std::endl;
+	net.addTask(cndTask);
+    }
+    
+    for(const Task &t: tasks)
+    {
+//         cnd::model::Task cndTask;
+//         cndTask.setUID((std::string)t.name);
+//         taskMap[t.name] = cndTask;
+// 	net.addTask(cndTask);
+	
+//         for(const InputPort *ip: t.inputPorts)
+//         {
+//             std::cout << " InputPort " << ip->name << std::endl;
+// //             widget->addPort(t.name, ip->name);
+//         }
+        for(const OutputPort *op: t.outputPorts)
+        {
+            for(const Connection con:op->connections)
+            {
+                cnd::model::Connection cndConnection(std::to_string(id));
+                const cnd::model::PortRef portFrom(t.name, op->name);
+                cndConnection.setFrom(portFrom);
+// 		cndConnection.setSize(); // Buffer Size
+                addConnectionWithOut(&cndConnection, con.firstElement, op, false);
+		
+		net.addConnection((const cnd::model::Connection) cndConnection);
+//                 connectionMap[id] = cndConnection;
+		id++;
+//                 widget->addConnectedNodes(t.name+op->name, op->name, con.firstElement->localURI, con.firstElement->type);
+//                 visitMapWidget[con.firstElement->localURI] = true;
+//                 addOutputChannelElementRecursiveWidged(widget, con.firstElement, op);
+            }
+        }
+    }
+    
+    std::cout << net.getYAMLstring() << std::endl;
+    
+
+    
+    
+}
+
+
+
+
+
 
 
 }

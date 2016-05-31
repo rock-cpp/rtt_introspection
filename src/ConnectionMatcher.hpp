@@ -93,6 +93,8 @@ public:
     void printPort(const RTT::introspection::Port* port, int curIndent);
     
     void writeGraphToDotFile(const std::string &fileName);
+    
+    void exportToCndFile(const std::string &fileName);
 };
 
 
