@@ -10,6 +10,7 @@
 #include <orocos_cpp/CorbaNameService.hpp>
 #include "IntrospectionService.hpp"
 #include <boost/filesystem.hpp>
+#include <fstream>
 
 using namespace orocos_cpp;
 
@@ -95,7 +96,9 @@ int main(int argc, char** argv)
 
     matcher.createGraph();
     
-    std::cout << matcher.generateNetwork().getYAMLstring() << std::endl;
+    std::ofstream out("cndnet.yaml");
+    out << matcher.generateNetwork().getYAMLstring();
+    out.close();
     
     spawner.killAll();
     
