@@ -51,6 +51,10 @@ class TaskData
 public:
     std::string taskName;
     
+    std::string taskType;
+    
+    int32_t taskState;
+    
     std::vector<PortData> portData;
 };
 

@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 
     matcher.createGraph();
     
-    matcher.exportToCndFile("test.dot");
+    std::cout << matcher.generateNetwork().getYAMLstring() << std::endl;
     
     spawner.killAll();
     

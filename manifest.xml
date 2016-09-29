@@ -9,5 +9,6 @@
   <depend package="base/cmake" />
   <depend package="tools/orocos_cpp" />
   <depend package="rtt" />
+  <depend package="tools/cnd/model" />
   
 </package>

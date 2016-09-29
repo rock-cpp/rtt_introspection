@@ -4,7 +4,12 @@
 #include <rtt/Port.hpp>
 #include <rtt/transports/mqueue/MQChannelElement.hpp>
 #include <rtt/plugin/ServicePlugin.hpp>
+#include <rtt/extras/FileDescriptorActivity.hpp>
+#include <rtt/Activity.hpp>
+#include <rtt/Time.hpp>
+#include <rtt/DataFlowInterface.hpp>
 #include <orocos_cpp/PluginHelper.hpp>
+#include <orocos_cpp_base/ProxyPort.hpp>
 
 using namespace orocos_cpp;
 
@@ -30,6 +35,50 @@ TaskData IntrospectionService::getIntrospectionInformation()
     
     TaskData taskData;
     taskData.taskName = task->getName();
+    
+//     RTT::base::PortInterface* pi = task->getPort("state");
+//     OutputPort<int32_t>* stateop = (OutputPort< int32_t >*)pi;
+//     stateop->getLastWrittenValue();
+    
+    taskData.taskState = task->getTaskState();
+    base::ActivityInterface* acinterface = task->getActivity();
+    
+    
+    
+    
+    if(RTT::extras::FileDescriptorActivity* fda = dynamic_cast<RTT::extras::FileDescriptorActivity*>(acinterface))
+    {
+//          taskData.taskActivity.setType(cnd::model::ListTools::activityTypeFromString("FDDRIVEN"));
+    }
+    else if(RTT::Activity* acti = dynamic_cast<RTT::Activity*>(acinterface))
+    {
+        if (acti->isPeriodic())
+        {
+//             taskData.taskActivity.setType(cnd::model::ListTools::activityTypeFromString("PERIODIC"));
+            
+            
+        }
+        else
+        {
+//             taskData.taskActivity.setType(cnd::model::ListTools::activityTypeFromString("NONE"));
+            RTT::DataFlowInterface* dfi = task->ports();
+            RTT::Service::shared_ptr rttservice = task->provides();
+        }
+        
+//         taskData.taskActivity.setPeriod(acti->getPeriod());
+//         taskData.taskActivity.setPriority(acti->getPriority());
+       
+        
+        
+    }
+    
+    RTT::OperationInterfacePart* opif = task->getOperation("getModelName");
+    
+    if(opif)
+    {
+	RTT::OperationCaller<std::string ()> getModelName(opif);
+	taskData.taskType = getModelName();
+    }
     
     RTT::DataFlowInterface *dfif = task->ports();
     for(RTT::base::PortInterface *port : dfif->getPorts())
