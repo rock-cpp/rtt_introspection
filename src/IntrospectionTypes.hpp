@@ -46,6 +46,24 @@ public:
     std::vector<ConnectionData> connectionData;
 };
 
+
+class TaskActivity
+{
+public:
+    std::vector<std::string> eventPorts;
+    
+    std::string fileDescriptor;
+    
+    int priority;
+    
+    double period;
+    
+    std::string type;
+    
+    bool realTime;
+    
+};
+
 class TaskData
 {
 public:
@@ -56,6 +74,8 @@ public:
     int32_t taskState;
     
     std::vector<PortData> portData;
+    
+    TaskActivity taskActivity;
 };
 
 }

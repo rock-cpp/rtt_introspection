@@ -6,6 +6,7 @@
 #include <cnd/model/Deployment.hpp>
 #include <cnd/model/PortRef.hpp>
 #include <cnd/model/Task.hpp>
+#include <cnd/model/Activity.hpp>
 #include <string>
 
 namespace RTT
@@ -46,6 +47,7 @@ void ConnectionMatcher::createGraph()
         task->name = taskData.taskName;
         task->type = taskData.taskType;
         task->state = taskData.taskState;
+        task->activity = taskData.taskActivity;
         curIndent += 4;
         for(const PortData &pd: taskData.portData)
         {
@@ -410,8 +412,12 @@ cnd::model::Network ConnectionMatcher::generateNetwork()
         cndTask.setUID(t.name);
         cndTask.setTaskState(std::to_string(t.state));
         cndTask.setModelType(t.type);
-//         cnd::model::Activity ac = cnd::model::Activity();
-//         ac.setType();
+        cnd::model::Activity ac = cnd::model::Activity();
+        ac.setType(t.activity.type);
+        ac.setPeriod(t.activity.period);
+        ac.setPriority(t.activity.priority);
+        ac.setRealTime(t.activity.realTime);
+        cndTask.setActivity(ac);
         
         net.addTask(cndTask);
         

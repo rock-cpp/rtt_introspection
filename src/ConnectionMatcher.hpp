@@ -75,6 +75,7 @@ public:
     std::string name;
     std::string type;
     int32_t state;
+    TaskActivity activity;
     
     std::vector<InputPort *> inputPorts;
     std::vector<OutputPort *> outputPorts;

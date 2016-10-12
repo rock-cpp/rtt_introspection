@@ -44,40 +44,36 @@ TaskData IntrospectionService::getIntrospectionInformation()
     base::ActivityInterface* acinterface = task->getActivity();
     
     
-    
-    
     if(RTT::extras::FileDescriptorActivity* fda = dynamic_cast<RTT::extras::FileDescriptorActivity*>(acinterface))
     {
-//          taskData.taskActivity.setType(cnd::model::ListTools::activityTypeFromString("FDDRIVEN"));
+        taskData.taskActivity.type = "FDDRIVEN";
+        taskData.taskActivity.realTime = fda->getScheduler() == ORO_SCHED_RT;
+        // Not able to get File Descriptor yet
     }
     else if(RTT::Activity* acti = dynamic_cast<RTT::Activity*>(acinterface))
     {
         if (acti->isPeriodic())
         {
-//             taskData.taskActivity.setType(cnd::model::ListTools::activityTypeFromString("PERIODIC"));
-            
-            
+            taskData.taskActivity.type = "PERIODIC";
         }
         else
         {
-//             taskData.taskActivity.setType(cnd::model::ListTools::activityTypeFromString("NONE"));
+            taskData.taskActivity.type = "NONE";
             RTT::DataFlowInterface* dfi = task->ports();
             RTT::Service::shared_ptr rttservice = task->provides();
         }
-        
-//         taskData.taskActivity.setPeriod(acti->getPeriod());
-//         taskData.taskActivity.setPriority(acti->getPriority());
-       
-        
-        
+        taskData.taskActivity.period = acti->getPeriod();
+        taskData.taskActivity.priority = acti->getPriority();
+        taskData.taskActivity.realTime = acti->getScheduler() == ORO_SCHED_RT;
+        // Not able to get event Ports
     }
     
     RTT::OperationInterfacePart* opif = task->getOperation("getModelName");
     
     if(opif)
     {
-	RTT::OperationCaller<std::string ()> getModelName(opif);
-	taskData.taskType = getModelName();
+        RTT::OperationCaller<std::string ()> getModelName(opif);
+        taskData.taskType = getModelName();
     }
     
     RTT::DataFlowInterface *dfif = task->ports();
