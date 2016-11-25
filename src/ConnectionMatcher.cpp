@@ -8,6 +8,7 @@
 #include <cnd/model/Task.hpp>
 #include <cnd/model/Activity.hpp>
 #include <string>
+#include <cnd/model/Lists.hpp>
 
 namespace RTT
 {
@@ -48,6 +49,9 @@ void ConnectionMatcher::createGraph()
         task->type = taskData.taskType;
         task->state = taskData.taskState;
         task->activity = taskData.taskActivity;
+        task->deployment = taskData.taskDeployment;
+        task->command = taskData.taskCommand;
+        task->pid = taskData.taskPid;
         curIndent += 4;
         for(const PortData &pd: taskData.portData)
         {
@@ -404,22 +408,48 @@ cnd::model::Network ConnectionMatcher::generateNetwork()
     
     std::map<int,cnd::model::Connection> connectionMap;
     
+    std::map<int,cnd::model::Deployment> deploymentMap;
+    
     int id = 0;
     
     for(const Task &t: tasks)
     {
         cnd::model::Task cndTask;
         cndTask.setUID(t.name);
-        cndTask.setTaskState(std::to_string(t.state));
+        cndTask.setTaskState(t.state);
         cndTask.setModelType(t.type);
         cnd::model::Activity ac = cnd::model::Activity();
-        ac.setType(t.activity.type);
+        ac.setType(cnd::model::ListTools::activityTypeFromString(t.activity.type));
         ac.setPeriod(t.activity.period);
         ac.setPriority(t.activity.priority);
         ac.setRealTime(t.activity.realTime);
         cndTask.setActivity(ac);
         
         net.addTask(cndTask);
+        
+        
+        auto it = deploymentMap.find(t.pid);
+        if(it == deploymentMap.end())
+        {
+            cnd::model::Deployment depl = cnd::model::Deployment(std::to_string(t.pid));
+            depl.setDeployer("orogen");
+            depl.setHostID("localhost");
+            depl.setProcessName(t.deployment);
+            std::map<std::string, std::string> taskList;
+            taskList[t.name] = t.command;
+            depl.setTaskList(taskList);
+            deploymentMap.insert(std::make_pair(t.pid,  depl));
+        }
+        else
+        {
+            std::map<std::string, std::string> taskList = it->second.getTaskList();
+            if(taskList.find(t.name) == taskList.end())
+            {
+                taskList[t.name] = t.command;
+                it->second.setTaskList(taskList);
+            }
+            
+        }
         
         for(const OutputPort *op: t.outputPorts)
         {
@@ -435,6 +465,11 @@ cnd::model::Network ConnectionMatcher::generateNetwork()
                 id++;
             }
         }
+    }
+    
+    for(auto depl:deploymentMap)
+    {
+        net.addDeployment((const cnd::model::Deployment) depl.second);
     }
     
     return net;

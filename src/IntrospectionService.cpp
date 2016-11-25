@@ -10,6 +10,8 @@
 #include <rtt/DataFlowInterface.hpp>
 #include <orocos_cpp/PluginHelper.hpp>
 #include <orocos_cpp_base/ProxyPort.hpp>
+#include <sys/types.h>
+#include <unistd.h>
 
 using namespace orocos_cpp;
 
@@ -28,6 +30,24 @@ IntrospectionService::IntrospectionService(RTT::TaskContext* owner): Service(Ser
     owner->addOperation(*op);
 }
 
+const char* get_process_name_by_pid(const int pid)
+{
+    char* name = (char*)calloc(1024,sizeof(char));
+    if(name){
+        std::sprintf(name, "/proc/%d/cmdline",pid);
+        std::FILE* f = std::fopen(name,"r");
+        if(f){
+            size_t size;
+            size = std::fread(name, sizeof(char), 1024, f);
+            if(size>0){
+                if('\n'==name[size-1])
+                    name[size-1]='\0';
+            }
+            std::fclose(f);
+        }
+    }
+    return name;
+}
 
 TaskData IntrospectionService::getIntrospectionInformation()
 {
@@ -36,11 +56,29 @@ TaskData IntrospectionService::getIntrospectionInformation()
     TaskData taskData;
     taskData.taskName = task->getName();
     
+    taskData.taskDeployment = get_process_name_by_pid(getpid());
+    taskData.taskCommand = task->engine()->getThread()->getName();
+    taskData.taskPid = getpid();
 //     RTT::base::PortInterface* pi = task->getPort("state");
 //     OutputPort<int32_t>* stateop = (OutputPort< int32_t >*)pi;
 //     stateop->getLastWrittenValue();
+    task->properties();
+    switch (task->getTaskState())
+    {
+        case RTT::base::TaskCore::TaskState::PreOperational:
+            taskData.taskState = "PRE_OPERATIONAL";
+            break;
+        case RTT::base::TaskCore::TaskState::Stopped:
+            taskData.taskState = "STOPPED";
+            break;
+        case RTT::base::TaskCore::TaskState::Running:
+            taskData.taskState = "RUNNING";
+            break;
+        default:
+            taskData.taskState = "EXCEPTION";
+    }
+   
     
-    taskData.taskState = task->getTaskState();
     base::ActivityInterface* acinterface = task->getActivity();
     
     
@@ -48,6 +86,7 @@ TaskData IntrospectionService::getIntrospectionInformation()
     {
         taskData.taskActivity.type = "FDDRIVEN";
         taskData.taskActivity.realTime = fda->getScheduler() == ORO_SCHED_RT;
+        taskData.taskActivity.priority = fda->getPriority();
         // Not able to get File Descriptor yet
     }
     else if(RTT::Activity* acti = dynamic_cast<RTT::Activity*>(acinterface))
@@ -59,8 +98,8 @@ TaskData IntrospectionService::getIntrospectionInformation()
         else
         {
             taskData.taskActivity.type = "NONE";
-            RTT::DataFlowInterface* dfi = task->ports();
-            RTT::Service::shared_ptr rttservice = task->provides();
+//             RTT::DataFlowInterface* dfi = task->ports();
+//             RTT::Service::shared_ptr rttservice = task->provides();
         }
         taskData.taskActivity.period = acti->getPeriod();
         taskData.taskActivity.priority = acti->getPriority();

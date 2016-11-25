@@ -73,8 +73,11 @@ private:
 
 public:
     std::string name;
+    std::string command;
+    int pid;
     std::string type;
-    int32_t state;
+    std::string state;
+    std::string deployment;
     TaskActivity activity;
     
     std::vector<InputPort *> inputPorts;
