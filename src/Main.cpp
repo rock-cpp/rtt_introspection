@@ -10,16 +10,37 @@
 #include <orocos_cpp/CorbaNameService.hpp>
 #include "IntrospectionService.hpp"
 #include <boost/filesystem.hpp>
+#include <orocos_cpp/TypeRegistry.hpp>
 
 using namespace orocos_cpp;
+
+orocos_cpp::TypeRegistry typeReg;
+
+bool loadTypkekit(const std::string &typeName)
+{
+    std::string tkName;
+    if(typeReg.getTypekitDefiningType(typeName, tkName))
+    {
+        if(orocos_cpp::PluginHelper::loadTypekitAndTransports(tkName))
+        {
+            return true;
+        }
+    }
+    
+    std::cout << "failed to load typekit for " << typeName << std::endl;
+    return false;
+}
 
 int main(int argc, char** argv)
 {
     Spawner &spawner(Spawner::getInstace());
     RTT::corba::TaskContextServer::InitOrb(argc, argv);
 
-    PluginHelper::loadTypekitAndTransports("rtt-types");
-    PluginHelper::loadTypekitAndTransports("rtt_introspection");
+    typeReg.loadTypelist();
+    
+    RTT::types::TypeInfoRepository *ti = RTT::types::TypeInfoRepository::Instance().get();
+    boost::function<bool (const std::string &)> f(&loadTypkekit);
+    ti->setAutoLoader(f);
 
     if(argc > 2)
     {    
