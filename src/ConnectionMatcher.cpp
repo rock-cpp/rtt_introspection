@@ -458,13 +458,38 @@ cnd::model::Network ConnectionMatcher::generateNetwork()
     
             for(const Connection con:op->connections)
             {
-                cnd::model::Connection cndConnection(std::to_string(id));
-                const cnd::model::PortRef portFrom(t.name, op->name);
-                cndConnection.setFrom(portFrom);cndConnection.getUID();
-                addConnectionWithOut(&cndConnection, con.firstElement, op);
-
-                net.addConnection((const cnd::model::Connection) cndConnection);
-                id++;
+                bool connected = false;
+                // Follow the chain of ChannelBase objects to the end
+                std::string otherTaskName;
+                std::string otherTaskPortName;
+                ChannelBase *cb = con.firstElement;
+                while (cb)
+                {
+                    // Check if it is a different port, and quit the loop if it is
+                    if(cb->connectedToPort && (cb->connectedToPort != dynamic_cast< const Port *>(op)))
+                    {
+                        otherTaskName = cb->connectedToPort->owningTask->name;
+                        otherTaskPortName = cb->connectedToPort->name;
+                        connected = true;
+                        break;
+                    }
+                    // Otherwise follow the cb elements
+                    if (cb->out.size())
+                        cb = cb->out.front();
+                    else
+                        cb = nullptr;
+                }
+                if (connected)
+                {
+                    // Setup the connection
+                    const cnd::model::PortRef portFrom(t.name, op->name);
+                    const cnd::model::PortRef portTo(otherTaskName, otherTaskPortName);
+                    cnd::model::Connection cndConnection(std::to_string(id));
+                    cndConnection.setFrom(portFrom);
+                    cndConnection.setTo(portTo);
+                    net.addConnection((const cnd::model::Connection) cndConnection);
+                    id++;
+                }
             }
         }
     }
