@@ -78,6 +78,7 @@ public:
     std::string type;
     std::string state;
     std::string deployment;
+    std::string hostname;
     TaskActivity activity;
     
     std::vector<InputPort *> inputPorts;

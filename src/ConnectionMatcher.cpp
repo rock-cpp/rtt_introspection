@@ -52,6 +52,7 @@ void ConnectionMatcher::createGraph()
         task->deployment = taskData.taskDeployment;
         task->command = taskData.taskCommand;
         task->pid = taskData.taskPid;
+        task->hostname = taskData.taskHost;
         curIndent += 4;
         for(const PortData &pd: taskData.portData)
         {
@@ -431,9 +432,10 @@ cnd::model::Network ConnectionMatcher::generateNetwork()
         auto it = deploymentMap.find(t.pid);
         if(it == deploymentMap.end())
         {
-            cnd::model::Deployment depl = cnd::model::Deployment(std::to_string(t.pid));
+            // When we have distributed deployments, we use the hostname,pid pair to generate a UID for deployments
+            cnd::model::Deployment depl = cnd::model::Deployment(t.hostname + std::to_string(t.pid));
             depl.setDeployer("orogen");
-            depl.setHostID("localhost");
+            depl.setHostID(t.hostname);
             depl.setProcessName(t.deployment);
             std::map<std::string, std::string> taskList;
             taskList[t.name] = t.command;
