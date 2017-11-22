@@ -426,18 +426,19 @@ cnd::model::Network ConnectionMatcher::generateNetwork()
         net.addTask(cndTask);
         
         // Create or find deployment for the task
-        auto it = deploymentMap.find(t.name);
+        std::string depUID(t.hostname + std::to_string(t.pid));
+        auto it = deploymentMap.find(depUID);
         if(it == deploymentMap.end())
         {
             // When we have distributed deployments, we use the hostname,pid pair to generate a UID for deployments
-            cnd::model::Deployment depl = cnd::model::Deployment(t.hostname + std::to_string(t.pid));
+            cnd::model::Deployment depl = cnd::model::Deployment(depUID);
             depl.setDeployer("orogen");
             depl.setHostID(t.hostname);
             depl.setProcessName(t.deployment);
             std::map<std::string, std::string> taskList;
             taskList[t.name] = t.command;
             depl.setTaskList(taskList);
-            deploymentMap.insert(std::make_pair(t.name,  depl));
+            deploymentMap.insert(std::make_pair(depUID,  depl));
         }
         else
         {
