@@ -52,6 +52,7 @@ void ConnectionMatcher::createGraph()
         task->deployment = taskData.taskDeployment;
         task->command = taskData.taskCommand;
         task->pid = taskData.taskPid;
+        task->hostname = taskData.taskHost;
         curIndent += 4;
         for(const PortData &pd: taskData.portData)
         {
@@ -405,11 +406,8 @@ void addConnectionWithOut(cnd::model::Connection* con, const ChannelBase *ce, co
 
 cnd::model::Network ConnectionMatcher::generateNetwork()
 {
-    
-    std::map<int,cnd::model::Connection> connectionMap;
-    
-    std::map<int,cnd::model::Deployment> deploymentMap;
-    
+    // Use task uid (which coincides with its name) to resolve deployment membership
+    std::map<std::string,cnd::model::Deployment> deploymentMap;
     int id = 0;
     
     for(const Task &t: tasks)
@@ -427,18 +425,20 @@ cnd::model::Network ConnectionMatcher::generateNetwork()
         
         net.addTask(cndTask);
         
-        
-        auto it = deploymentMap.find(t.pid);
+        // Create or find deployment for the task
+        std::string depUID(t.hostname + std::to_string(t.pid));
+        auto it = deploymentMap.find(depUID);
         if(it == deploymentMap.end())
         {
-            cnd::model::Deployment depl = cnd::model::Deployment(std::to_string(t.pid));
+            // When we have distributed deployments, we use the hostname,pid pair to generate a UID for deployments
+            cnd::model::Deployment depl = cnd::model::Deployment(depUID);
             depl.setDeployer("orogen");
-            depl.setHostID("localhost");
+            depl.setHostID(t.hostname);
             depl.setProcessName(t.deployment);
             std::map<std::string, std::string> taskList;
             taskList[t.name] = t.command;
             depl.setTaskList(taskList);
-            deploymentMap.insert(std::make_pair(t.pid,  depl));
+            deploymentMap.insert(std::make_pair(depUID,  depl));
         }
         else
         {
@@ -448,21 +448,45 @@ cnd::model::Network ConnectionMatcher::generateNetwork()
                 taskList[t.name] = t.command;
                 it->second.setTaskList(taskList);
             }
-            
         }
         
+        // Cycle through output ports of the task and find other possible ports connected to them
         for(const OutputPort *op: t.outputPorts)
         {
-    
             for(const Connection con:op->connections)
             {
-                cnd::model::Connection cndConnection(std::to_string(id));
-                const cnd::model::PortRef portFrom(t.name, op->name);
-                cndConnection.setFrom(portFrom);cndConnection.getUID();
-                addConnectionWithOut(&cndConnection, con.firstElement, op);
-
-                net.addConnection((const cnd::model::Connection) cndConnection);
-                id++;
+                bool connected = false;
+                // Follow the chain of ChannelBase objects to the end
+                std::string otherTaskName;
+                std::string otherTaskPortName;
+                ChannelBase *cb = con.firstElement;
+                while (cb)
+                {
+                    // Check if it is a different port, and quit the loop if it is
+                    if(cb->connectedToPort && (cb->connectedToPort != dynamic_cast< const Port *>(op)))
+                    {
+                        otherTaskName = cb->connectedToPort->owningTask->name;
+                        otherTaskPortName = cb->connectedToPort->name;
+                        connected = true;
+                        break;
+                    }
+                    // Otherwise follow the cb elements
+                    if (cb->out.size())
+                        cb = cb->out.front();
+                    else
+                        cb = nullptr;
+                }
+                if (connected)
+                {
+                    // Setup the connection
+                    const cnd::model::PortRef portFrom(t.name, op->name);
+                    const cnd::model::PortRef portTo(otherTaskName, otherTaskPortName);
+                    cnd::model::Connection cndConnection(std::to_string(id));
+                    cndConnection.setFrom(portFrom);
+                    cndConnection.setTo(portTo);
+                    net.addConnection((const cnd::model::Connection) cndConnection);
+                    id++;
+                }
             }
         }
     }

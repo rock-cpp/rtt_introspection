@@ -55,6 +55,11 @@ TaskData IntrospectionService::getIntrospectionInformation()
     
     TaskData taskData;
     taskData.taskName = task->getName();
+
+    // Get the hostname of the running system
+    char hostName[256];
+    gethostname(hostName, 256);
+    taskData.taskHost = std::string(hostName);
     
     taskData.taskDeployment = get_process_name_by_pid(getpid());
     taskData.taskCommand = task->engine()->getThread()->getName();

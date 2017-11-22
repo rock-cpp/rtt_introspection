@@ -82,6 +82,8 @@ public:
     TaskActivity taskActivity;
     
     std::string taskDeployment;
+
+    std::string taskHost;
 };
 
 }
