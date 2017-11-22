@@ -406,11 +406,8 @@ void addConnectionWithOut(cnd::model::Connection* con, const ChannelBase *ce, co
 
 cnd::model::Network ConnectionMatcher::generateNetwork()
 {
-    
-    std::map<int,cnd::model::Connection> connectionMap;
-    
-    std::map<int,cnd::model::Deployment> deploymentMap;
-    
+    // Use task uid (which coincides with its name) to resolve deployment membership
+    std::map<std::string,cnd::model::Deployment> deploymentMap;
     int id = 0;
     
     for(const Task &t: tasks)
@@ -428,8 +425,8 @@ cnd::model::Network ConnectionMatcher::generateNetwork()
         
         net.addTask(cndTask);
         
-        
-        auto it = deploymentMap.find(t.pid);
+        // Create or find deployment for the task
+        auto it = deploymentMap.find(t.name);
         if(it == deploymentMap.end())
         {
             // When we have distributed deployments, we use the hostname,pid pair to generate a UID for deployments
@@ -440,7 +437,7 @@ cnd::model::Network ConnectionMatcher::generateNetwork()
             std::map<std::string, std::string> taskList;
             taskList[t.name] = t.command;
             depl.setTaskList(taskList);
-            deploymentMap.insert(std::make_pair(t.pid,  depl));
+            deploymentMap.insert(std::make_pair(t.name,  depl));
         }
         else
         {
@@ -450,12 +447,11 @@ cnd::model::Network ConnectionMatcher::generateNetwork()
                 taskList[t.name] = t.command;
                 it->second.setTaskList(taskList);
             }
-            
         }
         
+        // Cycle through output ports of the task and find other possible ports connected to them
         for(const OutputPort *op: t.outputPorts)
         {
-    
             for(const Connection con:op->connections)
             {
                 bool connected = false;
