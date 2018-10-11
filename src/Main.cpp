@@ -36,7 +36,7 @@ int main(int argc, char** argv)
     Spawner &spawner(Spawner::getInstace());
     RTT::corba::TaskContextServer::InitOrb(argc, argv);
 
-    typeReg.loadTypelist();
+    typeReg.loadTypeRegistries();
     
     RTT::types::TypeInfoRepository *ti = RTT::types::TypeInfoRepository::Instance().get();
     boost::function<bool (const std::string &)> f(&loadTypkekit);
