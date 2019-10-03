@@ -35,7 +35,7 @@ rock_executable(rtt_introspection_bin Main.cpp
 	logger-proxies
     DEPS 
         rtt_introspection
-        matcher)
+        rtt_introspection_matcher)
 
 rock_executable(to_cnd ToCND.cpp
     DEPS_PKGCONFIG
@@ -48,7 +48,7 @@ rock_executable(to_cnd ToCND.cpp
     logger-proxies
     DEPS 
         rtt_introspection
-        matcher)
+        rtt_introspection_matcher)
         
 install(TARGETS rtt_introspection
         LIBRARY DESTINATION lib/orocos/plugins/rtt_introspection/plugins)
