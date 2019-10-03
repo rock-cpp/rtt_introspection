@@ -16,12 +16,11 @@ rock_library(rtt_introspection
         orocos_cpp_base
 )
 
-rock_library(matcher
-    SOURCES ConnectionMatcher.cpp
-    HEADERS ConnectionMatcher.hpp
+rock_library(rtt_introspection_matcher
+    SOURCES ConnectionMatcher.cpp CNDMatcher.cpp
+    HEADERS ConnectionMatcher.hpp CNDMatcher.hpp
     DEPS_PKGCONFIG
         cnd-model
-        
 )
 
 rock_executable(rtt_introspection_bin Main.cpp
@@ -37,7 +36,7 @@ rock_executable(rtt_introspection_bin Main.cpp
         rtt_introspection
         rtt_introspection_matcher)
 
-rock_executable(to_cnd ToCND.cpp
+rock_executable(cnd-introspect cnd-introspect.cpp
     DEPS_PKGCONFIG
         rtt_typelib-${OROCOS_TARGET}
         orocos-rtt-${OROCOS_TARGET}

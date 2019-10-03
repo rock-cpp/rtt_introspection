@@ -2,7 +2,6 @@
 #define CONNECTIONMATCHER_H
 
 #include "IntrospectionTypes.hpp"
-#include <cnd/model/Network.hpp>
 #include <vector>
 #include <map>
 #include <iostream>
@@ -89,7 +88,6 @@ class ConnectionMatcher
 {
     std::vector<TaskData> data;
     std::vector<Task> tasks;
-    cnd::model::Network net;
 public:
     ConnectionMatcher();
     
@@ -102,8 +100,6 @@ public:
     void printPort(const RTT::introspection::Port* port, int curIndent);
     
     void writeGraphToDotFile(const std::string &fileName);
-    
-    cnd::model::Network generateNetwork();
 };
 
 

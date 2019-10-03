@@ -1,24 +1,15 @@
 #include "ConnectionMatcher.hpp"
 #include <boost/graph/adjacency_list.hpp>
 #include <fstream>
-#include <cnd/model/Annotation.hpp>
-#include <cnd/model/Connection.hpp>
-#include <cnd/model/Deployment.hpp>
-#include <cnd/model/PortRef.hpp>
-#include <cnd/model/Task.hpp>
-#include <cnd/model/Activity.hpp>
 #include <string>
-#include <cnd/model/Lists.hpp>
 
 namespace RTT
 {
 namespace introspection
 {
 
-    
 ConnectionMatcher::ConnectionMatcher()
 {
-
 }
 
 void ConnectionMatcher::addTaskData(const RTT::introspection::TaskData &ndata)
@@ -359,152 +350,5 @@ void ConnectionMatcher::printGraph()
 
 
 std::map<std::string, bool> visitMapWidget;
-
-void addConnectionWithOut(cnd::model::Connection* con, const ChannelBase *ce, const Port* fromPort)
-{
-    if(ce->connectedToPort && ce->connectedToPort != fromPort)
-    {
-	  const cnd::model::PortRef portTo(ce->connectedToPort->owningTask->name, ce->connectedToPort->name);
-	  con->setTo(portTo);
-	  
-	  return;
-  
-    }
-    
-    if(ce->type == std::string("ChannelBufferElement"))
-    {
-        con->setType(cnd::model::ConPolicy::BUFFER);
-        const BufferChannel *be = dynamic_cast<const BufferChannel *>(ce);
-        con->setSize(be->bufferSize);
-    } 
-    else if(ce->type == std::string("ChannelDataElement"))
-    {
-        con->setType(cnd::model::ConPolicy::DATA);
-    }
-    
-    for(ChannelBase *elem: ce->out)
-    {
-        if(visitMapWidget.find(elem->localURI) == visitMapWidget.end())
-        {
-            visitMapWidget[elem->localURI] = true;
-            addConnectionWithOut(con, elem, fromPort);
-        }
-    }
-    
-    for(ChannelBase *elem: ce->in)
-    {
-        if(visitMapWidget.find(elem->localURI) == visitMapWidget.end())
-        {
-            visitMapWidget[elem->localURI] = true;
-            addConnectionWithOut(con, elem, fromPort);
-        }
-    }
-    
 }
-
-
-
-cnd::model::Network ConnectionMatcher::generateNetwork()
-{
-    // Use task uid (which coincides with its name) to resolve deployment membership
-    std::map<std::string,cnd::model::Deployment> deploymentMap;
-    int id = 0;
-    
-    for(const Task &t: tasks)
-    {
-        cnd::model::Task cndTask;
-        cndTask.setUID(t.name);
-        cndTask.setTaskState(t.state);
-        cndTask.setModelType(t.type);
-        cnd::model::Activity ac = cnd::model::Activity();
-        ac.setType(cnd::model::ListTools::activityTypeFromString(t.activity.type));
-        ac.setPeriod(t.activity.period);
-        ac.setPriority(t.activity.priority);
-        ac.setRealTime(t.activity.realTime);
-        cndTask.setActivity(ac);
-        
-        net.addTask(cndTask);
-        
-        // Create or find deployment for the task
-        std::string depUID(t.hostname + std::to_string(t.pid));
-        auto it = deploymentMap.find(depUID);
-        if(it == deploymentMap.end())
-        {
-            // When we have distributed deployments, we use the hostname,pid pair to generate a UID for deployments
-            cnd::model::Deployment depl = cnd::model::Deployment(depUID);
-            depl.setDeployer("orogen");
-            depl.setHostID(t.hostname);
-            depl.setProcessName(t.deployment);
-            std::map<std::string, std::string> taskList;
-            taskList[t.name] = t.command;
-            depl.setTaskList(taskList);
-            deploymentMap.insert(std::make_pair(depUID,  depl));
-        }
-        else
-        {
-            std::map<std::string, std::string> taskList = it->second.getTaskList();
-            if(taskList.find(t.name) == taskList.end())
-            {
-                taskList[t.name] = t.command;
-                it->second.setTaskList(taskList);
-            }
-        }
-        
-        // Cycle through output ports of the task and find other possible ports connected to them
-        for(const OutputPort *op: t.outputPorts)
-        {
-            for(const Connection con:op->connections)
-            {
-                bool connected = false;
-                // Follow the chain of ChannelBase objects to the end
-                std::string otherTaskName;
-                std::string otherTaskPortName;
-                ChannelBase *cb = con.firstElement;
-                while (cb)
-                {
-                    // Check if it is a different port, and quit the loop if it is
-                    if(cb->connectedToPort && (cb->connectedToPort != dynamic_cast< const Port *>(op)))
-                    {
-                        otherTaskName = cb->connectedToPort->owningTask->name;
-                        otherTaskPortName = cb->connectedToPort->name;
-                        connected = true;
-                        break;
-                    }
-                    // Otherwise follow the cb elements
-                    if (cb->out.size())
-                        cb = cb->out.front();
-                    else
-                        cb = nullptr;
-                }
-                if (connected)
-                {
-                    // Setup the connection
-                    const cnd::model::PortRef portFrom(t.name, op->name);
-                    const cnd::model::PortRef portTo(otherTaskName, otherTaskPortName);
-                    cnd::model::Connection cndConnection(std::to_string(id));
-                    cndConnection.setFrom(portFrom);
-                    cndConnection.setTo(portTo);
-                    net.addConnection((const cnd::model::Connection) cndConnection);
-                    id++;
-                }
-            }
-        }
-    }
-    
-    for(auto depl:deploymentMap)
-    {
-        net.addDeployment((const cnd::model::Deployment) depl.second);
-    }
-    
-    return net;
-}
-
-
-
-
-
-
-
-}
-    
 }
