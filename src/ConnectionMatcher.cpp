@@ -295,7 +295,7 @@ void ConnectionMatcher::printPort(const Port* port, int curIndent)
         
         if(!con.firstElement->connectedToPort || con.firstElement->connectedToPort != port)
         {
-            std::cout << "Port mismatch for element " << *(con.firstElement) << " for port " << port->name << "(" << port << ")";
+            std::cout << "Port mismatch for element " << " for port " << port->name << "(" << port << ")";
             if(!con.firstElement->connectedToPort)
                 std::cout << " not connected ";
             else
