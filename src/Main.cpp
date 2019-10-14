@@ -14,7 +14,7 @@
 
 using namespace orocos_cpp;
 
-orocos_cpp::TypeRegistry typeReg;
+orocos_cpp::TypeRegistry typeReg(orocos_cpp::PkgConfigRegistryPtr(new orocos_cpp::PkgConfigRegistry({},true)));
 
 bool loadTypkekit(const std::string &typeName)
 {
