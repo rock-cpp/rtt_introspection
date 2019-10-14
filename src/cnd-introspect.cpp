@@ -1,14 +1,12 @@
 #include <iostream>
-#include <rtt/transports/corba/TaskContextServer.hpp>
-#include <rtt/transports/corba/TaskContextProxy.hpp>
-#include <orocos_cpp/PluginHelper.hpp>
 #include <rtt/OperationCaller.hpp>
 #include "CNDMatcher.hpp"
-#include <orocos_cpp/CorbaNameService.hpp>
 #include "IntrospectionService.hpp"
 #include <boost/filesystem.hpp>
+#include <orocos_cpp/CorbaNameService.hpp>
 #include <fstream>
 #include <getopt.h>
+#include <orocos_cpp/orocos_cpp.hpp>
 
 
 using namespace orocos_cpp;
@@ -70,78 +68,6 @@ cnd::model::Network getCND(CorbaNameService& ns){
     return RTT::introspection::CNDMatcher::generateCND(tasksData);
 }
 
-CosNaming::NamingContext_var getNameService(const std::string name_service_ip, const std::string name_service_port)
-{
-    if(CORBA::is_nil(RTT::corba::ApplicationServer::orb))
-        throw std::runtime_error("Corba is not initialized. Call Orocos.initialize first.");
-
-    CosNaming::NamingContext_var rootContext;
-
-    // Obtain reference to Root POA.
-    CORBA::Object_var obj_poa = RTT::corba::ApplicationServer::orb->resolve_initial_references("RootPOA");
-    PortableServer::POA_var root_poa = PortableServer::POA::_narrow(obj_poa);
-    if(CORBA::is_nil(root_poa))
-        throw std::runtime_error("Failed to narrow poa context.");
-
-    // activate poa manager
-    root_poa->the_POAManager()->activate();
-
-    // Obtain reference to NameServiceClient
-    CORBA::Object_var obj;
-    if(!name_service_ip.empty())
-    {
-        std::string temp("corbaloc::");
-        temp = temp + name_service_ip;
-        if(!name_service_port.empty())
-            temp = temp + ":" + name_service_port;
-        temp = temp +"/NameService";
-        obj = RTT::corba::ApplicationServer::orb->string_to_object(temp.c_str());
-    }
-    else
-        obj = RTT::corba::ApplicationServer::orb->resolve_initial_references("NameService");
-
-
-    try{
-        rootContext = CosNaming::NamingContext::_narrow(obj.in());
-    }catch(CORBA::TRANSIENT ex){
-         std::cerr << "CORBA::TRANSIENT received while trying to obtain reference to NameService Client" << std::endl;
-    }
-    if(CORBA::is_nil(rootContext)){
-        std::cerr << "Failed to narrow NameService context." << std::endl;
-        return nullptr;
-    }
-
-    return rootContext;
-}
-
-bool validateNameServiceClient(std::string hostname, std::string port=""){
-    return getNameService(hostname, port);
-}
-
-bool set_corba_ns_host(std::string hostname_or_ip){
-    char* envi = strdup(("ORBInitRef=NameService=corbaname::"+hostname_or_ip).c_str());
-    int ret = putenv(envi);
-    return ret;
-}
-
-bool initializeCORBA(int argc, char**argv, std::string host="")
-{
-    if(!host.empty()){
-        set_corba_ns_host(host);
-    }
-    bool orb_st = RTT::corba::ApplicationServer::InitOrb(argc, argv);
-    if(!orb_st){
-
-        std::cerr << "\nError initializing CORBA application server" <<std::endl;
-        return false;
-    }
-    if(!validateNameServiceClient(host, "")){
-        std::cerr << "\nCould not connect to name service '"<<host<<"'" <<std::endl;
-        return false;
-    }
-    return true;
-}
-
 void usage(std::string name){
     std::cout << "Usage: " << name << " <options> CNDFILE\n\n"
               << "\tCNDFILE\t\tPath to store CND file at\n"
@@ -190,13 +116,17 @@ int main(int argc, char** argv)
     }
     std::string cnd_filepath = argv[optind++];
 
-    //Init CORBA
-    std::cout << "Initializing CORBA" << std::endl;
-    if(!initializeCORBA(argc, argv, host)){
-        return(EXIT_FAILURE);
-    }
-    std::cout << "Loading Typekits and Transports" << std::endl;
-    PluginHelper::loadAllTypekitAndTransports();
+    //Initialize CORBA
+    orocos_cpp::OrocosCppConfig cfg;
+    cfg.init_corba = true;
+    cfg.init_bundle = false;
+    cfg.init_type_registry = true;
+    cfg.load_all_packages = true;
+    cfg.load_task_configs = false;
+    cfg.load_typekits = true;
+
+    orocos_cpp::OrocosCpp rock;
+    rock.initialize(cfg,false);
 
     std::cout << "Performing introspection..." << std::endl;
     CorbaNameService ns;
