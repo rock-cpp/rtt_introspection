@@ -124,13 +124,15 @@ int main(int argc, char** argv)
     cfg.load_all_packages = true;
     cfg.load_task_configs = false;
     cfg.load_typekits = true;
+    cfg.corba_host = host;
 
     orocos_cpp::OrocosCpp rock;
     rock.initialize(cfg,false);
 
+    std::cout << "Connectiong CORBA..." << std::endl;
+    CorbaNameService ns(cfg.corba_host);
+    bool st = ns.connect();
     std::cout << "Performing introspection..." << std::endl;
-    CorbaNameService ns;
-    ns.connect();
     cnd::model::Network cnd = getCND(ns);
     std::cout << "Introspection done." << std::endl;
 
