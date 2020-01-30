@@ -140,7 +140,12 @@ TaskData IntrospectionService::getIntrospectionInformation()
         if(!conManager)
             throw std::runtime_error("Introspection :Error, no connection manager found");
         
-        for(const RTT::internal::ConnectionManager::ChannelDescriptor &desc : conManager->getConnections())
+        //
+        // Set back to conManager->getChannels() to conManager->getConnection() after
+        // https://github.com/orocos-toolchain/rtt/pull/302 got merged
+        // and rock no lnger constraints RTT's version to an old version here:
+        //    https://github.com/rock-core/package_set/blob/9441d7775d1a93a9920b562a670c37351d13fccb/source.yml#L101
+        for(const RTT::internal::ConnectionManager::ChannelDescriptor &desc : conManager->getChannels())
         {
             ConnectionData connData;
             connData.policy = boost::get<2>(desc);
