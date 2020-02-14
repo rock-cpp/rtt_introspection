@@ -17,10 +17,8 @@ rock_library(rtt_introspection
 )
 
 rock_library(rtt_introspection_matcher
-    SOURCES ConnectionMatcher.cpp CNDMatcher.cpp
-    HEADERS ConnectionMatcher.hpp CNDMatcher.hpp
-    DEPS_PKGCONFIG
-        cnd-model
+    SOURCES ConnectionMatcher.cpp
+    HEADERS ConnectionMatcher.hpp
 )
 
 rock_executable(rtt_introspection_bin Main.cpp
@@ -36,18 +34,5 @@ rock_executable(rtt_introspection_bin Main.cpp
         rtt_introspection
         rtt_introspection_matcher)
 
-rock_executable(cnd-introspect cnd-introspect.cpp
-    DEPS_PKGCONFIG
-        rtt_typelib-${OROCOS_TARGET}
-        orocos-rtt-${OROCOS_TARGET}
-        orocos-rtt-mqueue-${OROCOS_TARGET}
-        orocos-rtt-corba-${OROCOS_TARGET}
-        orocos_cpp
-        orocos_cpp_base
-    logger-proxies
-    DEPS 
-        rtt_introspection
-        rtt_introspection_matcher)
-        
 install(TARGETS rtt_introspection
         LIBRARY DESTINATION lib/orocos/plugins/rtt_introspection/plugins)
