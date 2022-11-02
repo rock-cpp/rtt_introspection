@@ -64,9 +64,11 @@ TaskData IntrospectionService::getIntrospectionInformation()
     taskData.taskDeployment = get_process_name_by_pid(getpid());
     taskData.taskCommand = task->engine()->getThread()->getName();
     taskData.taskPid = getpid();
-//     RTT::base::PortInterface* pi = task->getPort("state");
-//     OutputPort<int32_t>* stateop = (OutputPort< int32_t >*)pi;
-//     stateop->getLastWrittenValue();
+
+    RTT::base::PortInterface* pi = task->getPort("state");
+    OutputPort<int32_t>* stateop = (OutputPort< int32_t >*)pi;
+    taskData.taskStateInternal = stateop->getLastWrittenValue();
+
     task->properties();
     switch (task->getTaskState())
     {

@@ -74,6 +74,8 @@ public:
     std::string taskType;
     
     std::string taskState;
+
+    int taskStateInternal; //Internal "Rock" state as communicated via state port
     
     int taskPid;
     
