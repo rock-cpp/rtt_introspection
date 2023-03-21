@@ -19,6 +19,8 @@ rock_library(rtt_introspection
 rock_library(rtt_introspection_matcher
     SOURCES ConnectionMatcher.cpp
     HEADERS ConnectionMatcher.hpp
+    DEPS_PKGCONFIG
+        orocos-rtt-${OROCOS_TARGET}
 )
 
 rock_executable(rtt_introspection_bin Main.cpp
